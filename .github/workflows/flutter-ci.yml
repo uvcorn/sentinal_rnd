@@ -33,12 +33,12 @@ jobs:
         run: |
           npm install googleapis google-auth-library
 
-      - name: Upload APK to Google Drive
+      - name: Decode Credentials and Upload APK to Google Drive
         run: |
           # Decode the base64-encoded credentials file
           echo "${{ secrets.GDRIVE_CREDENTIALS }}" | base64 -d > credentials.json
 
-          # Create a JavaScript file to upload the APK
+          # Create a JavaScript file to upload the APK to Google Drive
           echo '
           const { google } = require("googleapis");
           const fs = require("fs");
