@@ -24,26 +24,9 @@ jobs:
       - name: Build APK
         run: flutter build apk --release
 
-      - name: Create credentials file
-        run: echo '${{ secrets.GDRIVE_CREDENTIALS }}' > credentials.json
-
-      - name: Install rclone
-        run: |
-          curl https://rclone.org/install.sh | sudo bash
-
-      - name: Delete old APK files
-        run: |
-          mkdir -p ~/.config/rclone
-          cat > ~/.config/rclone/rclone.conf << EOF
-          [gdrive]
-          type = drive
-          scope = drive
-          service_account_file = $(pwd)/credentials.json
-          EOF
-
-          # পুরনো APK files delete করুন
-          rclone delete gdrive:${{ secrets.GDRIVE_FOLDER_ID }} --include "*.apk" -v || true
-
       - name: Upload to Google Drive
-        run: |
-          rclone copy build/app/outputs/flutter-apk/app-release.apk gdrive:${{ secrets.GDRIVE_FOLDER_ID }} -v --drive-acknowledge-abuse
+        uses: willo32/google-drive-upload@v1
+        with:
+          target: build/app/outputs/flutter-apk/app-release.apk
+          credentials: ${{ secrets.GDRIVE_OAUTH_CREDENTIALS }}
+          parent_folder_id: ${{ secrets.GDRIVE_FOLDER_ID }}
