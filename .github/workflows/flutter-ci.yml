@@ -24,11 +24,12 @@ jobs:
       - name: Build APK
         run: flutter build apk --release
 
+      - name: Setup rclone
+        run: |
+          curl https://rclone.org/install.sh | sudo bash
+          mkdir -p ~/.config/rclone
+          echo "${{ secrets.RCLONE_CONFIG }}" > ~/.config/rclone/rclone.conf
+
       - name: Upload to Google Drive
-        uses: adityak74/google-drive-upload-git-action@main
-        with:
-          credentials: ${{ secrets.GDRIVE_CREDENTIALS }}
-          filename: build/app/outputs/flutter-apk/app-release.apk
-          folderId: ${{ secrets.GDRIVE_FOLDER_ID }}
-          name: app-release-${{ github.sha }}.apk # Optional: unique name with commit hash
-          overwrite: "true" # Optional: overwrite if file exists
+        run: |
+          rclone copy build/app/outputs/flutter-apk/app-release.apk gdrive:${{ secrets.GDRIVE_FOLDER_NAME }} -v
