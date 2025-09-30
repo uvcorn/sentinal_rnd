@@ -24,7 +24,7 @@ jobs:
       - name: Build APK
         run: flutter build apk --release
 
-            - name: Notify Gmail
+      - name: Notify Gmail
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: smtp.gmail.com
