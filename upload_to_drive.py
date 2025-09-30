@@ -1,25 +1,16 @@
-from google.oauth2 import service_account
+from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 import os
+import json
 
-SCOPES = ['https://www.googleapis.com/auth/drive']
-SERVICE_ACCOUNT_FILE = 'credentials.json'
+SCOPES = ['https://www.googleapis.com/auth/drive.file']
 FOLDER_ID = os.environ['GDRIVE_FOLDER_ID']
 FILE_NAME = os.environ['BUILD_FILE_NAME']
 FILE_PATH = f'build/app/outputs/flutter-apk/{FILE_NAME}'
-try:
-    FOLDER_ID = os.environ['GDRIVE_FOLDER_ID']
-    FILE_NAME = os.environ['BUILD_FILE_NAME']
-except KeyError as e:
-    print(f"Error: Missing required environment variable: {e}")
-    print("Please set GDRIVE_FOLDER_ID and BUILD_FILE_NAME in GitHub Secrets")
-    sys.exit(1)
 
-FILE_PATH = f'build/app/outputs/flutter-apk/{FILE_NAME}'
 def delete_old_files(service):
-    # আগের ফাইলগুলো খোঁজ এবং ডিলিট করার জন্য কোয়েরি
-    query = f"'{FOLDER_ID}' in parents and name contains '.apk'"
+    query = f"'{FOLDER_ID}' in parents and name contains '.apk' and trashed=false"
     results = service.files().list(q=query, fields="files(id, name)").execute()
     files = results.get('files', [])
 
@@ -32,8 +23,17 @@ def delete_old_files(service):
         service.files().delete(fileId=file['id']).execute()
 
 def upload_file():
-    credentials = service_account.Credentials.from_service_account_file(
-        SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+    # OAuth credentials থেকে token load করুন
+    creds_data = json.loads(os.environ['GDRIVE_TOKEN'])
+    credentials = Credentials(
+        token=creds_data['access_token'],
+        refresh_token=creds_data.get('refresh_token'),
+        token_uri="https://oauth2.googleapis.com/token",
+        client_id=creds_data['client_id'],
+        client_secret=creds_data['client_secret'],
+        scopes=SCOPES
+    )
+    
     service = build('drive', 'v3', credentials=credentials)
 
     # আগের APK ফাইলগুলো ডিলিট করো
