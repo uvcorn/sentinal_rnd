@@ -24,56 +24,37 @@ jobs:
       - name: Build APK
         run: flutter build apk --release
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+            - name: Notify Gmail
+        uses: dawidd6/action-send-mail@v3
         with:
-          node-version: "16"
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.GMAIL_USERNAME }}
+          password: ${{ secrets.GMAIL_PASSWORD }}
+          from: ${{ needs.Get_Info.outputs.commit_author_email }}
+          to: mdshadhinali.official@gmail.com
+          subject: "CI 👉🏻 New APK Build Uploaded"
+          convert_markdown: true
+          body: |
+            Dear Sir,
 
-      - name: Install Google API client
-        run: |
-          npm install googleapis google-auth-library
+            I hope this email finds you well. I just wanted to let you know that a new APK build has been uploaded to our Google Drive.
 
-      - name: Decode Credentials and Upload APK to Google Drive
-        run: |
-          # Decode the base64-encoded credentials file
-          echo "${{ secrets.GDRIVE_CREDENTIALS }}" | base64 -d > credentials.json
+            We are pleased to share the following details:
 
-          # Create a JavaScript file to upload the APK to Google Drive
-          echo '
-          const { google } = require("googleapis");
-          const fs = require("fs");
-          const path = require("path");
+            - Project: ${{ needs.Get_Info.outputs.project_name }}
+            - Branch: ${{ needs.Get_Info.outputs.branch_name }}
+            - Date: ${{ needs.Get_Info.outputs.date_time }}
 
-          // Authenticate with Google Drive using the service account credentials
-          const auth = new google.auth.GoogleAuth({
-            keyFile: "credentials.json",
-            scopes: ["https://www.googleapis.com/auth/drive.file"],
-          });
+            You can download the APK build by clicking on the following link: 
+             - 🔗 Google Drive Download Url: [Click Here](https://drive.google.com/drive/folders/${{needs.Get_Info.outputs.folder_id.value}})
+             - 🔗 Transfer.sh Download Url: [Click Here](${{ needs.Upload_Apk.outputs.upload_url }})
 
-          async function uploadFile() {
-            const drive = google.drive({ version: "v3", auth });
-            const fileMetadata = {
-              name: "app-release.apk", // File name on Google Drive
-              parents: ["${{ secrets.GDRIVE_FOLDER_ID }}"], // Optional: specify folder ID
-            };
-            const media = {
-              mimeType: "application/vnd.android.package-archive",
-              body: fs.createReadStream("build/app/outputs/flutter-apk/app-release.apk"),
-            };
-            try {
-              const res = await drive.files.create({
-                resource: fileMetadata,
-                media: media,
-                fields: "id",
-              });
-              console.log("File uploaded successfully, File ID:", res.data.id);
-            } catch (error) {
-              console.error("Error uploading file:", error);
-            }
-          }
+            Should you have any questions or require further assistance, please do not hesitate to reach out to us. We value your continued support and look forward to serving you.
 
-          uploadFile();
-          ' > upload-to-drive.js
+            Best regards,
 
-          # Run the upload script
-          node upload-to-drive.js
+            ${{ needs.Get_Info.outputs.commit_author }}
+            Flutter Developer
+            IX Solutions Company
+            Email: ${{ needs.Get_Info.outputs.commit_author_email }}
