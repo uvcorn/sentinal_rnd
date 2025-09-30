@@ -36,5 +36,8 @@ jobs:
         run: echo "${{ secrets.GDRIVE_CREDENTIALS }}" > credentials.json
 
       - name: Upload to Google Drive
+        env:
+          GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
+          BUILD_FILE_NAME: ${{ secrets.BUILD_FILE_NAME }}
         run: |
           python upload_to_drive.py

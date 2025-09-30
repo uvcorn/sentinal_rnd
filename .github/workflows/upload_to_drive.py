@@ -8,7 +8,15 @@ SERVICE_ACCOUNT_FILE = 'credentials.json'
 FOLDER_ID = os.environ['GDRIVE_FOLDER_ID']
 FILE_NAME = os.environ['BUILD_FILE_NAME']
 FILE_PATH = f'build/app/outputs/flutter-apk/{FILE_NAME}'
+try:
+    FOLDER_ID = os.environ['GDRIVE_FOLDER_ID']
+    FILE_NAME = os.environ['BUILD_FILE_NAME']
+except KeyError as e:
+    print(f"Error: Missing required environment variable: {e}")
+    print("Please set GDRIVE_FOLDER_ID and BUILD_FILE_NAME in GitHub Secrets")
+    sys.exit(1)
 
+FILE_PATH = f'build/app/outputs/flutter-apk/{FILE_NAME}'
 def delete_old_files(service):
     # আগের ফাইলগুলো খোঁজ এবং ডিলিট করার জন্য কোয়েরি
     query = f"'{FOLDER_ID}' in parents and name contains '.apk'"
