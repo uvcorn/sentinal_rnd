@@ -34,46 +34,46 @@ jobs:
           npm install googleapis google-auth-library
 
       - name: Upload APK to Google Drive
-  run: |
-    # Decode the base64-encoded credentials file
-    echo "${{ secrets.GDRIVE_CREDENTIALS }}" | base64 -d > credentials.json
+        run: |
+          # Decode the base64-encoded credentials file
+          echo "${{ secrets.GDRIVE_CREDENTIALS }}" | base64 -d > credentials.json
 
-    # Create a JavaScript file to upload the APK
-    echo '
-    const { google } = require("googleapis");
-    const fs = require("fs");
-    const path = require("path");
+          # Create a JavaScript file to upload the APK
+          echo '
+          const { google } = require("googleapis");
+          const fs = require("fs");
+          const path = require("path");
 
-    // Authenticate with Google Drive using the service account credentials
-    const auth = new google.auth.GoogleAuth({
-      keyFile: "credentials.json",
-      scopes: ["https://www.googleapis.com/auth/drive.file"],
-    });
+          // Authenticate with Google Drive using the service account credentials
+          const auth = new google.auth.GoogleAuth({
+            keyFile: "credentials.json",
+            scopes: ["https://www.googleapis.com/auth/drive.file"],
+          });
 
-    async function uploadFile() {
-      const drive = google.drive({ version: "v3", auth });
-      const fileMetadata = {
-        name: "app-release.apk", // File name on Google Drive
-        parents: ["${{ secrets.GDRIVE_FOLDER_ID }}"], // Optional: specify folder ID
-      };
-      const media = {
-        mimeType: "application/vnd.android.package-archive",
-        body: fs.createReadStream("build/app/outputs/flutter-apk/app-release.apk"),
-      };
-      try {
-        const res = await drive.files.create({
-          resource: fileMetadata,
-          media: media,
-          fields: "id",
-        });
-        console.log("File uploaded successfully, File ID:", res.data.id);
-      } catch (error) {
-        console.error("Error uploading file:", error);
-      }
-    }
+          async function uploadFile() {
+            const drive = google.drive({ version: "v3", auth });
+            const fileMetadata = {
+              name: "app-release.apk", // File name on Google Drive
+              parents: ["${{ secrets.GDRIVE_FOLDER_ID }}"], // Optional: specify folder ID
+            };
+            const media = {
+              mimeType: "application/vnd.android.package-archive",
+              body: fs.createReadStream("build/app/outputs/flutter-apk/app-release.apk"),
+            };
+            try {
+              const res = await drive.files.create({
+                resource: fileMetadata,
+                media: media,
+                fields: "id",
+              });
+              console.log("File uploaded successfully, File ID:", res.data.id);
+            } catch (error) {
+              console.error("Error uploading file:", error);
+            }
+          }
 
-    uploadFile();
-    ' > upload-to-drive.js
+          uploadFile();
+          ' > upload-to-drive.js
 
-    # Run the upload script
-    node upload-to-drive.js
+          # Run the upload script
+          node upload-to-drive.js
